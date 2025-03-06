@@ -1,6 +1,6 @@
 ---
 name: Task
-about: Describe this issue template's purpose here.
+about: Template for writing task for engineers (not in story format)
 title: ''
 labels: ''
 assignees: ''
