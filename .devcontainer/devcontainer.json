@@ -1,0 +1,25 @@
+{
+    "name": "Book Recommender Container",
+    "build": {
+      "dockerfile": "../Dockerfile",
+      "context": ".." 
+    },
+    "remoteUser": "root",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python"
+            ],
+            "settings": {
+                "python.testing.pytestArgs": [
+                    "."
+                ],
+                "python.testing.unittestEnabled": false,
+                "python.testing.pytestEnabled": true,
+                "python.formatting.provider": "black",
+                "python.linting.mypyEnabled": true,
+                "python.linting.enabled": true
+            }
+        }
+    }
+  }
