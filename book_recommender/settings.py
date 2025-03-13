@@ -28,8 +28,8 @@ def get_env_variable(var_name):
     """Get secret key from .env file"""
     try:
         return os.getenv(var_name)
-    except KeyError:
-        raise ImproperlyConfigured(f"Set the {var_name} environment variable.")
+    except KeyError as exc:
+        raise ImproperlyConfigured(f"Set the {var_name} environment variable.") from exc
     
 load_dotenv()
 

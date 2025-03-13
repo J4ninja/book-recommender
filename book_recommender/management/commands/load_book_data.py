@@ -1,14 +1,14 @@
-from django.core.management.base import BaseCommand
-from book_recommender.models import Book
 import os
 import csv
+from django.core.management.base import BaseCommand
+from book_recommender.models import Book
 
 
 class Command(BaseCommand):
     '''Helper function to load data from csv into neo4j database'''
     help = 'Loads Book Data into Database'
 
-    def handle(self, *args, **kwargs):
+    def handle(self):
         book_import_file = 'books.csv'
         file_path = os.path.join(os.getcwd(), 'data', book_import_file)
 
