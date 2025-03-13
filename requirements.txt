@@ -1,2 +1,5 @@
 Django==5.1.7
+django_neomodel==0.2.0
+neo4j==5.19.0
+neomodel==5.3.3
 python-dotenv==1.0.1

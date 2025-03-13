@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from django.core.exceptions import ImproperlyConfigured
+from neomodel import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,14 +25,19 @@ load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 def get_env_variable(var_name):
+    """Get secret key from .env file"""
     try:
-        return os.getenv("DJANGO_SECRET_KEY")
+        return os.getenv(var_name)
     except KeyError:
         raise ImproperlyConfigured(f"Set the {var_name} environment variable.")
     
 load_dotenv()
 
 SECRET_KEY = get_env_variable("DJANGO_SECRET_KEY")
+USERNAME = get_env_variable("NEO4J_USERNAME")
+PASSWORD = get_env_variable("NEO4J_PASSWORD")
+URI = get_env_variable("NEO4J_URI")
+config.DATABASE_URL = f"neo4j+s://{USERNAME}:{PASSWORD}@{URI}"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -48,6 +54,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_neomodel',
+    'book_recommender'
 ]
 
 MIDDLEWARE = [
