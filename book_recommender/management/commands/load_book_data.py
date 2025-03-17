@@ -8,7 +8,7 @@ class Command(BaseCommand):
     '''Helper function to load data from csv into neo4j database'''
     help = 'Loads Book Data into Database'
 
-    def handle(self):
+    def handle(self, *args, **kwargs):
         book_import_file = 'books.csv'
         file_path = os.path.join(os.getcwd(), 'data', book_import_file)
 
