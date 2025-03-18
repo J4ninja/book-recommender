@@ -21,6 +21,7 @@ class Command(BaseCommand):
 
             for row in reader:
                 book = Book(
+                    book_ID = '',
                     title=row.get('Title', ''),
                     description=row.get('description', ''),
                     authors=[row.get('authors', '')],

@@ -4,7 +4,6 @@ from .models import Book
 
 def index(request):
     '''Home Page view'''
-    print(Book.nodes.all())
     return render(request, 'book_recommender/index.html')
 
 def test_data_models(request):
