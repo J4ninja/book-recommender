@@ -1,28 +1,29 @@
 from django_neomodel import DjangoNode
-from neomodel import (StringProperty, DateTimeProperty, UniqueIdProperty, 
+from neomodel import (StringProperty, DateTimeProperty, UniqueIdProperty, IntegerProperty,
                       FloatProperty, ArrayProperty, RelationshipTo, RelationshipFrom)
 
 
 class Book(DjangoNode):
-    book_ID = StringProperty(unique_index = True, required = True) #make pk once finalized
+    book_ID = StringProperty(unique_index = True, required = True) 
     title = StringProperty()
     description = StringProperty()
-    authors = ArrayProperty()
+    author = StringProperty()
     image = StringProperty()
     preview_link = StringProperty()
     published_date = StringProperty()
     info_link = StringProperty()
-    categories = ArrayProperty()
+    category = StringProperty()
 
     reviews = RelationshipFrom('Review', 'REVIEWS')
 
 class Review(DjangoNode):
-    review_ID = StringProperty(unique_index = True, required = True) 
-    helpfulness = StringProperty()
+    review_ID = StringProperty(unique_index = True, required = True)
+    helpfulness = FloatProperty()
     score = FloatProperty()
     time = DateTimeProperty()
     summary = StringProperty()
     text = StringProperty()
+    year = IntegerProperty()
 
     reviews = RelationshipTo('Book', 'REVIEWS')
     reviewed_by = RelationshipFrom('User', 'REVIEWED')
