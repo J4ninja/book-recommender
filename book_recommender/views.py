@@ -1,21 +1,32 @@
 from django.shortcuts import render
 from .models import Book, Review, User
 
-def add_review(review_ID, helpfulness, score, time, summary, text, year, user_ID, book_ID):
-    new_review = Review(review_ID, 
-                        helpfulness, 
-                        score, 
-                        time, 
-                        summary, 
-                        text, 
-                        year)
-    new_review.save()
-    
-    user = User.nodes.get(user_ID=user_ID)  
-    book = Book.nodes.get(book_ID=book_ID)
+def add_book(book_id,title, description, authors, image, preview_link, publisher, published_date, published_year, info_link, category, ratings_count):
+    new_book = Book(book_id,title, description, authors, image, preview_link, 
+                    publisher, published_date, published_year, info_link, category, ratings_count).save()
 
-    new_review.reviews.connect(book)
-    new_review.reviewed_by.connect(user)
+def add_review(review_id, title, price, helpfulness_ratio, review_score, review_time, review_summary, review_text):
+    new_review = new_review = Review(
+                    review_id=review_id,
+                    title=title,
+                    price=price,
+                    helpfulness_ratio=helpfulness_ratio,
+                    review_score=review_score,
+                    review_time=review_time,
+                    review_summary=review_summary,
+                    review_text=review_text
+                ).save()
+    add_connections_to_review(new_review)
+
+
+
+def add_connections_to_review(new_review):
+
+    user = User.nodes.get_or_none(user_id = new_review.user_id)
+    review = Review.nodes.get_or_none(review_id = new_review.review_id)
+    if user and review:
+        user.wrote_review.connect(review)
+        review.written_by.connect(user)
 
 
 def index(request):
