@@ -20,20 +20,5 @@ jobs:
         pip install pylint
         pip install -r requirements.txt
     - name: Analysing the code with pylint
-      id: pylint
       run: |
-        pylint --output-format=parseable $(git ls-files '*.py') > pylint_output.txt
-        # Show warnings and annotate them
-        cat pylint_output.txt
-        while IFS= read -r line; do
-          # Example of extracting the warning message and file location
-          if [[ "$line" == *"warning"* ]]; then
-            # Extract file name, line number, and warning message
-            file=$(echo "$line" | cut -d: -f1)
-            line_number=$(echo "$line" | cut -d: -f2)
-            message=$(echo "$line" | cut -d' ' -f4-)
-
-            # Create a GitHub Actions annotation for the warning
-            echo "::warning file=$file,line=$line_number::Warning: $message"
-          fi
-        done < pylint_output.txt
+        pylint $(git ls-files '*.py')
