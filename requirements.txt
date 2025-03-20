@@ -1,2 +1,5 @@
 Django==5.1.7
 python-dotenv==1.0.1
+pandas
+numpy
+sqllite3
