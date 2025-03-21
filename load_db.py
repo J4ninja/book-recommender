@@ -68,19 +68,35 @@ cursor.execute("PRAGMA foreign_keys = ON")
 conn.commit()
 print('tables created')
 
-#add indexes to assist with queries
+#change settings for faster insert
+cursor.execute('PRAGMA synchronous = OFF')
+cursor.execute('PRAGMA journal_mode = MEMORY')
+conn.commit()
+
+
+# Insert data using transactions & bulk insert
+print('Inserting books data...')
+conn.execute("BEGIN TRANSACTION")
+books_new.to_sql('books', conn, if_exists='append', index=False, chunksize=250)
+conn.commit()
+print('Books inserted')
+
+print('Inserting ratings data...')
+conn.execute("BEGIN TRANSACTION")
+ratings_new.to_sql('ratings', conn, if_exists='append', index=False)
+conn.commit()
+print('Ratings inserted')
+
+# Restore database settings after insert
+cursor.execute("PRAGMA synchronous = NORMAL")
+cursor.execute("PRAGMA journal_mode = WAL")
+
+# Recreate indexes after insert
 cursor.execute("CREATE INDEX idx_ratings_book_id ON ratings (book_id)")
 cursor.execute("CREATE INDEX idx_ratings_user_id ON ratings (user_id)")
 conn.commit()
-print('indicies created')
+print("Indexes recreated")
 
-# Insert data into books table
-books_new.to_sql('books', conn, if_exists='append', index=False)
-    
-# Insert data into ratings table
-ratings_new.to_sql('ratings', conn, if_exists='append', index=False)
-print('records inserted')
-
-# Commit all changes and close connection
-conn.commit()
+# Close connection
 conn.close()
+print("Database setup complete")
