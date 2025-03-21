@@ -1,5 +1,10 @@
+
+import numpy as np
+import pandas as pd
 from django.shortcuts import render
 from .models import Book, Review, User
+
+
 
 def add_book(book_id,title, description, authors, image, preview_link, publisher, published_date, published_year, info_link, category, ratings_count):
     new_book = Book(book_id,title, description, authors, image, preview_link, 
