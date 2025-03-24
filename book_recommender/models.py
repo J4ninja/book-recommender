@@ -14,7 +14,7 @@ class Book(DjangoNode):
     published_date = StringProperty()
     published_year = IntegerProperty()
     info_link = StringProperty()
-    category = StringProperty()
+    categories = StringProperty()
     ratings_count = FloatProperty()
 
     reviews = RelationshipFrom('Review', 'REVIEWS')
@@ -23,8 +23,6 @@ class Review(DjangoNode):
     review_id = StringProperty(unique_index = True, required = True)
     book_id = StringProperty(required = True)
     user_id = StringProperty(required = True)
-    title = StringProperty()
-    price = FloatProperty()
     helpfulness_ratio = FloatProperty()
     review_score = FloatProperty()
     review_time = DateTimeProperty()
@@ -35,7 +33,7 @@ class Review(DjangoNode):
     written_by = RelationshipFrom('User', 'WROTE_REVIEW')
 
 class User(DjangoNode):
-    user_ID = StringProperty(unique_index = True, required = True)
+    user_id = StringProperty(unique_index = True, required = True)
     profile_name = StringProperty()
 
     wrote_review = RelationshipTo('Review', 'WROTE_REVIEW')

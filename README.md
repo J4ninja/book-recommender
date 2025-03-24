@@ -35,7 +35,7 @@ Django secret keys are stored in the .env file. For first time set up, create a 
         DJANGO_SECRET_KEY='YOUR_SECRET_KEY'
 
 ### Database (neo4j) Connection
-The Django uses a connection to a cloud hosted neo4j instance. Add the following variables to your .env file (credentials provided via email)
+The Django uses a connection to a cloud hosted neo4j instance. Add the following variables to the .env file (credentials provided via email)
 
     NEO4J_URI=''  
     NEO4J_USERNAME=''  
@@ -44,11 +44,14 @@ The Django uses a connection to a cloud hosted neo4j instance. Add the following
     AURA_INSTANCENAME=''  
 
 ### Importing Data
-To load test data into the database run:
+Thes project consists of two databases, a SQLITE database for visualizations, and a NEO4J graph database for efficient graph queries.
+The NEO$J databse is hosted in the cloud and does not require any additional set up, but the SQLITE dataabse is local and will need to be created and loaded with clean data.
 
-        python management/commands/load_book_data.py 
-        
-This is to test data models as well as your database connection. Neo4j provides fuctionality for bulk imports from the web portal.
+0. Prerequsite: Download the Amazon Book Reviews dataset from https://www.kaggle.com/datasets/mohamedbakhet/amazon-books-reviews.
+1. Create a folder in the project directory call "data".
+2. Unzip the downloaded zip file and drop both books_data.csv and Books_rating.csv into "data".
+3. From the command line in the Dev Container, run "python data_clean.py". This will output cleaned csvs called books_new.csv and ratings_new.csv into the previously created "data" folder. The script    will print status updates to the terminal, as well as a confirmation of "csvs created" when complete.
+4. Once complete, in Dev Container, run "python load_db.py". This will create the database and tables and load data from the clean csvs into the SQLITE database. This script also will print status updates as well as a "Database setup complete" message once finished.
 
 ## Running the Application
 1. Open project in Dev Container

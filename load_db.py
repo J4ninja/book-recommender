@@ -4,7 +4,7 @@ import django
 import numpy as np
 import pandas as pd
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "book_recommender.settings")
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'book_recommender.settings')
 django.setup()
 
 
@@ -15,12 +15,12 @@ ratings_new = pd.read_csv('data/ratings_new.csv')
 
 ## Write the data to a SQLite database ##
 # Create connection to SQLite
-conn = sqlite3.connect("books.db")
+conn = sqlite3.connect('books.db')
 cursor = conn.cursor()
 
 # Drop tables if they exist
-cursor.execute("DROP TABLE IF EXISTS ratings")
-cursor.execute("DROP TABLE IF EXISTS books")
+cursor.execute('DROP TABLE IF EXISTS ratings')
+cursor.execute('DROP TABLE IF EXISTS books')
 print('tables dropped')
 
 # Create books table with appropriate data types
@@ -62,41 +62,31 @@ CREATE TABLE ratings (
 cursor.execute(create_ratings_table)
 
 # Enable foreign key constraints
-cursor.execute("PRAGMA foreign_keys = ON")
+cursor.execute('PRAGMA foreign_keys = ON')
 
 # Commit the schema changes
 conn.commit()
 print('tables created')
 
-#change settings for faster insert
-cursor.execute('PRAGMA synchronous = OFF')
-cursor.execute('PRAGMA journal_mode = MEMORY')
-conn.commit()
 
 
 # Insert data using transactions & bulk insert
 print('Inserting books data...')
-conn.execute("BEGIN TRANSACTION")
 books_new.to_sql('books', conn, if_exists='append', index=False, chunksize=250)
 conn.commit()
 print('Books inserted')
 
 print('Inserting ratings data...')
-conn.execute("BEGIN TRANSACTION")
-ratings_new.to_sql('ratings', conn, if_exists='append', index=False)
+ratings_new.to_sql('ratings', conn, if_exists='append', index=False, chucksize=250)
 conn.commit()
 print('Ratings inserted')
 
-# Restore database settings after insert
-cursor.execute("PRAGMA synchronous = NORMAL")
-cursor.execute("PRAGMA journal_mode = WAL")
-
-# Recreate indexes after insert
-cursor.execute("CREATE INDEX idx_ratings_book_id ON ratings (book_id)")
-cursor.execute("CREATE INDEX idx_ratings_user_id ON ratings (user_id)")
+# create indexes after insert
+cursor.execute('CREATE INDEX idx_ratings_book_id ON ratings (book_id)')
+cursor.execute('CREATE INDEX idx_ratings_user_id ON ratings (user_id)')
 conn.commit()
-print("Indexes recreated")
+print('Indexes recreated')
 
 # Close connection
 conn.close()
-print("Database setup complete")
+print('Database setup complete')
