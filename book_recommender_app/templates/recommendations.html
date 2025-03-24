@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="https://unpkg.com/cytoscape@3.19.0/dist/cytoscape.min.js"></script>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Graph on the left side -->
+        <div class="col-md-6">
+            <div id="cy" style="width: 100%; height: 600px;"></div>
+        </div>
+
+        <!-- User reviews list on the right side -->
+        <div class="col-md-6">
+            <h3>My Book Reviews</h3>
+            <ul class="list-group">
+                {% for user_review in user_reviews %}
+                    <li class="list-group-item" data-id="{{ user_review.review_id }}" data-title="{{ user_review.book_title }}">
+                        <strong>{{ user_review.book_title }}:</strong> {{ user_review.review_summary }}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No reviews yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    const nodes = {{ nodes|safe }};
+    const relationships = {{ relationships|safe }};
+
+    const cy = cytoscape({
+        container: document.getElementById('cy'),
+
+        elements: [
+            ...nodes.map(node => ({ data: { id: node.id, label: node.label } })),
+            ...relationships.map(rel => ({
+                data: { source: rel.source, target: rel.target, label: rel.label }
+            }))
+        ],
+
+        style: [
+            {
+                selector: 'node',
+                style: {
+                    'content': 'data(label)',
+                    'background-color': '#61bffc',
+                    'width': 40,
+                    'height': 40
+                }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'width': 2,
+                    'line-color': '#ddd',
+                    'target-arrow-color': '#ddd',
+                    'target-arrow-shape': 'triangle'
+                }
+            }
+        ],
+
+        layout: {
+            name: 'grid',
+            rows: 1
+        }
+    });
+
+</script>
+{% endblock %}

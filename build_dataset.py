@@ -81,7 +81,7 @@ cursor = conn.cursor()
 books_query = '''
 Select *
 FROM books
-LIMIT 10'''
+LIMIT 50'''
 cursor.execute(books_query)
 books = cursor.fetchall()
 
