@@ -72,12 +72,12 @@ print('tables created')
 
 # Insert data using transactions & bulk insert
 print('Inserting books data...')
-books_new.to_sql('books', conn, if_exists='append', index=False, chunksize=250)
+books_new.to_sql('books', conn, if_exists='append', index=False, chunksize=500)
 conn.commit()
 print('Books inserted')
 
 print('Inserting ratings data...')
-ratings_new.to_sql('ratings', conn, if_exists='append', index=False, chucksize=250)
+ratings_new.to_sql('ratings', conn, if_exists='append', index=False, chunksize=500)
 conn.commit()
 print('Ratings inserted')
 
