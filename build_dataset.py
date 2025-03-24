@@ -34,7 +34,7 @@ def add_book(book_details):
 
 def add_user(user_id, profile_name):
     '''adds user node from user_id and profile_name'''
-    try: 
+    try:
         new_user = User(
             user_id = user_id,
             profile_name = profile_name
