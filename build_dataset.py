@@ -70,7 +70,7 @@ def add_connections_to_review(new_book, new_user, new_review):
     if new_user and new_review and new_book:
         new_user.wrote_review.connect(new_review)
         new_review.written_by.connect(new_user)
-        new_book.reviews.connect(review)
+        new_book.reviews.connect(new_review)
         new_review.reviewed_book.connect(new_book)
 
 
