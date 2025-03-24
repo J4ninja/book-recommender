@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_neomodel',
-    'book_recommender'
+    'book_recommender_app'
 ]
 
 MIDDLEWARE = [
