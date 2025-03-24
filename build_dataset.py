@@ -1,13 +1,15 @@
 import sqlite3
+from datetime import datetime
 import os
 import django
-from datetime import datetime
-from book_recommender.models import Book, User, Review
 from neomodel.exceptions import RequiredProperty
+from sentence_transformers import SentenceTransformer
+from book_recommender_app.models import Book, User, Review
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "book_recommender.settings")
 django.setup()
 
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def add_book(book_details):
     '''adds book node from list object'''
@@ -44,6 +46,10 @@ def add_user(user_id, profile_name):
 def add_review(review_details):
     '''adds review node from a list object'''
     try:
+        #create embedding vector from review text using sbert model
+        review_text = review_details[10]  # Extract review text
+        embedding = model.encode(review_text).tolist()
+
         new_review = Review(
                 review_id = review_details[0],
                 book_id = review_details[1],
@@ -52,7 +58,8 @@ def add_review(review_details):
                 review_score = review_details[7],
                 review_time = datetime.strptime(review_details[8], '%Y-%m-%d'),
                 review_summary = review_details[9],
-                review_text = review_details[10]
+                review_text = review_details[10],
+                embedding = embedding
             ).save()
         return new_review
     except RequiredProperty as e:
@@ -74,7 +81,7 @@ cursor = conn.cursor()
 books_query = '''
 Select *
 FROM books
-LIMIT 100'''
+LIMIT 10'''
 cursor.execute(books_query)
 books = cursor.fetchall()
 

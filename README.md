@@ -45,7 +45,7 @@ The Django uses a connection to a cloud hosted neo4j instance. Add the following
 
 ### Importing Data
 Thes project consists of two databases, a SQLITE database for visualizations, and a NEO4J graph database for efficient graph queries.
-The NEO$J databse is hosted in the cloud and does not require any additional set up, but the SQLITE dataabse is local and will need to be created and loaded with clean data.
+The NEO4J databse is hosted in the cloud and does not require any additional set up, but the SQLITE dataabse is local and will need to be created and loaded with clean data.
 
 0. Prerequsite: Download the Amazon Book Reviews dataset from https://www.kaggle.com/datasets/mohamedbakhet/amazon-books-reviews.
 1. Create a folder in the project directory call "data".
@@ -57,7 +57,7 @@ The NEO$J databse is hosted in the cloud and does not require any additional set
 1. Open project in Dev Container
 2. Run:
 
-        python manage.py runserver 0.0.0.0:8000
+        python manage.py runserver
 
 3. Verify in `PORTS` that port 8000 is forwarded to localhost
 4. View application in browser at output link
