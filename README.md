@@ -46,7 +46,7 @@ The Django uses a connection to a cloud hosted neo4j instance. Add the following
 ### Importing Data
 To load test data into the database run:
 
-        python management/commands/load_book_data.py 
+        python book_recommender/management/commands/load_book_data.py 
         
 This is to test data models as well as your database connection. Neo4j provides fuctionality for bulk imports from the web portal.
 
@@ -54,7 +54,7 @@ This is to test data models as well as your database connection. Neo4j provides 
 1. Open project in Dev Container
 2. Run:
 
-        python manage.py runserver 0.0.0.0:8000
+        python manage.py runserver
 
 3. Verify in `PORTS` that port 8000 is forwarded to localhost
 4. View application in browser at output link
