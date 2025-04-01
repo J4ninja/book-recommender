@@ -1,14 +1,24 @@
 from sklearn.metrics.pairwise import cosine_similarity
-from django.shortcuts import render
 from .models import Book, Review, User
 
 def get_book_title_from_review(review):
+    '''gets book title from a review object'''
     book = review.reviewed_book.get_or_none()
-    book_title = book.title if book else 'Unknown Book'
+    book_title = book.title if book else 'Unknown Title'
     return book_title
 
+def get_reviews_to_compare(review):
+    '''gets all users that reviewed the same book as the passed in review object'''
+    book = review.reviewed_book.get_or_none()
+    all_reviews_for_book = [r for r in book.reviews.all() if r.review_id != review.review_id]
+    reviewers = [r.written_by for r in all_reviews_for_book]
+    print(len(reviewers))
+    all_reviews_to_compare = [reviewer.wrote_review for reviewer in reviewers]
+    return all_reviews_to_compare
+
 def find_similar_reviews(review):
-    all_reviews = Review.nodes.all()
+    '''finds similar reviews from a review object'''
+    all_reviews = get_reviews_to_compare(review)
     review_embeddings = [rev.embedding for rev in all_reviews]
     similarities = cosine_similarity([review.embedding], review_embeddings)
 

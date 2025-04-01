@@ -1,13 +1,7 @@
-import sqlite3
 from datetime import datetime
-import os
-import django
 from neomodel.exceptions import RequiredProperty
 from sentence_transformers import SentenceTransformer
 from book_recommender_app.models import Book, User, Review
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "book_recommender.settings")
-django.setup()
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -72,37 +66,3 @@ def add_connections_to_review(new_book, new_user, new_review):
         new_review.written_by.connect(new_user)
         new_book.reviews.connect(new_review)
         new_review.reviewed_book.connect(new_book)
-
-
-conn = sqlite3.connect("books.db")
-cursor = conn.cursor()
-
-
-books_query = '''
-Select *
-FROM books
-LIMIT 25'''
-cursor.execute(books_query)
-books = cursor.fetchall()
-
-for book in books:
-    added_book = add_book(book)
-    book_id = book[0]
-    cursor.execute("SELECT * FROM ratings WHERE book_id = ? AND user_id IS NOT NULL", [book_id])
-    reviews = cursor.fetchall()
-    column_names = [desc[0] for desc in cursor.description]
-
-    # Convert to list of dictionaries
-    records = [dict(zip(column_names, review)) for review in reviews]
-    for record in records:
-        print(record)
-    # Print results
-    #for record in records:
-        #print(record)
-        #for review in reviews:
-        #    added_user = add_user(user_id = review[4], profile_name = review[5])
-        #    added_review = add_review(review)
-        #    add_connections_to_review(added_book, added_user, added_review)
-        #print(f'Book ID: {book_id} added')
-
-conn.close()

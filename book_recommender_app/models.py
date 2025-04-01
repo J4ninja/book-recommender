@@ -20,7 +20,7 @@ class Book(DjangoNode):
     reviews = RelationshipFrom('Review', 'REVIEWS')
 
 class Review(DjangoNode):
-    review_id = StringProperty(unique_index = True, required = True)
+    review_id = IntegerProperty(unique_index = True, required = True)
     book_id = StringProperty(required = True)
     user_id = StringProperty(required = True)
     helpfulness_ratio = FloatProperty()
