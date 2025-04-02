@@ -16,7 +16,7 @@
             <h3>My Book Reviews</h3>
             <ul class='list-group'>
                 {% for user_review in user_reviews %}
-                    <li class='list-group-item' data-id='{{ user_review.review_id }}' data-title='{{ user_review.book_title }}'>
+                    <li class='list-group-item' data-id='{{ user_review.review_id }}' data-title='{{ user_review.review_summary }}'>
                         <strong>{{ user_review.book_title }}:</strong> {{ user_review.review_summary }}
                     </li>
                 {% empty %}
@@ -28,81 +28,175 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-        const nodes = {{ nodes|safe }};
-        const relationships = {{ relationships|safe }};
+$(document).ready(function () {
+    const nodes = {{ nodes|safe }};
+    const relationships = {{ relationships|safe }};
 
-        const cy = cytoscape({
-            container: document.getElementById('cy'),
+    const cy = cytoscape({
+        container: document.getElementById('cy'),
 
-            elements: [
-                ...nodes.map(node => ({ data: { id: node.id, label: node.label } })),
-                ...relationships.map(rel => ({
-                    data: { source: rel.source, target: rel.target, label: rel.label }
-                }))
-            ],
+        elements: [
+            ...nodes.map(node => ({ data: { id: node.id, label: node.label, type: node.type } })),  // Add type attribute
+            ...relationships.map(rel => ({
+                data: { source: rel.source, target: rel.target, label: rel.label }
+            }))
+        ],
 
-            style: [
-                {
-                    selector: 'node',
-                    style: {
-                        'content': 'data(label)',
-                        'background-color': '#61bffc',
-                        'width': 40,
-                        'height': 40
-                    }
-                },
-                {
-                    selector: 'edge',
-                    style: {
-                        'width': 2,
-                        'line-color': '#ddd',
-                        'target-arrow-color': '#ddd',
-                        'target-arrow-shape': 'triangle'
-                    }
+        style: [
+            {
+                selector: 'node[type = "active_user"]',
+                style: {
+                    'content': 'data(label)',
+                    'background-color': '#9fe300',
+                    'width': 40,
+                    'height': 40
                 }
-            ],
+            },
+            {
+                selector: 'node[type = "user"]',
+                style: {
+                    'content': 'data(label)',
+                    'background-color': '#5b00e3',
+                    'width': 40,
+                    'height': 40
+                }
+            },
+            {
+                selector: 'node[type = "book"]',
+                style: {
+                    'content': 'data(label)',
+                    'background-color': '#00e339',
+                    'width': 40,
+                    'height': 40
+                }
+            },
+            {
+                selector: 'node[type = "review"]',
+                style: {
+                    'content': 'data(label)',
+                    'background-color': '#0400e3',
+                    'width': 40,
+                    'height': 40
+                }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'width': 2,
+                    'line-color': '#ddd',
+                    'target-arrow-color': '#ddd',
+                    'target-arrow-shape': 'triangle'
+                }
+            }
+        ],
 
-            layout: {
-                name: 'grid',
-                rows: 1
+        layout: {
+            name: 'grid',
+            rows: 1
+        }
+    });
+
+    $('.list-group-item').click(function () {
+    const reviewId = $(this).data('id');
+    const reviewSummary = $(this).data('title');
+
+    if (cy.getElementById(reviewId).length === 0) {
+        $.ajax({
+            url: '/add_node_to_graph/',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: reviewId, label: reviewSummary }),
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            success: function (response) {
+                if (response.status === 'success') {
+                    if (cy.getElementById(reviewId).length === 0) {
+                        cy.add({
+                            group: 'nodes',
+                            data: { id: reviewId, label: reviewSummary, type: 'review' }
+                        });
+                    }
+
+                    // Add the book node if it exists and doesn't already exist
+                    if (response.new_nodes && response.new_nodes.length > 0) {
+                        response.new_nodes.forEach(node => {
+                            if (cy.getElementById(node.id).length === 0) {
+                                // Add the book node
+                                cy.add({
+                                    group: 'nodes',
+                                    data: { id: node.id, label: node.label, type: node.type }
+                                });
+
+                                // Add the edge between the book and the review
+                                cy.add({
+                                    group: 'edges',
+                                    data: {
+                                        source: node.id,
+                                        target: reviewId,
+                                        label: 'REVIEW'
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Add edges for the review and other nodes (e.g., user)
+                    response.edges.forEach(edge => {
+                        if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
+                            cy.add({
+                                group: 'edges',
+                                data: { source: edge.source, target: edge.target, label: edge.label }
+                            });
+                        }
+                    });
+
+                    cy.layout({ name: 'cose' }).run();
+                }
+            },
+            error: function (xhr) {
+                console.error('Error adding node:', xhr.responseText);
             }
         });
+    }
+});
 
-        $('.list-group-item').click(function () {
-            const reviewId = $(this).data('id');
-            const bookTitle = $(this).data('title');
 
-            if (cy.getElementById(reviewId).length === 0) {
-                $.ajax({
-                    url: '/add_node_to_graph/',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ id: reviewId, label: bookTitle }),
-                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            cy.add({ group: 'nodes', data: { id: reviewId, label: bookTitle } });
 
-                            response.edges.forEach(edge => {
-                                if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
-                                    cy.add({
-                                        group: 'edges',
-                                        data: { source: edge.source, target: edge.target, label: edge.label }
-                                    });
-                                }
-                            });
-                            
-                            cy.layout({ name: 'cose' }).run();
+    // Handle clicking on nodes to fetch new recommendations
+    cy.on('tap', 'node', function (event) {
+        const nodeId = event.target.id();
+
+        $.ajax({
+            url: '/get_new_recommendations/',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: nodeId }),
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            success: function (response) {
+                if (response.status === 'success') {
+                    response.nodes.forEach(node => {
+                        if (cy.getElementById(node.id).length === 0) {
+                            cy.add({ group: 'nodes', data: { id: node.id, label: node.label } });
                         }
-                    },
-                    error: function (xhr) {
-                        console.error('Error adding node:', xhr.responseText);
-                    }
-                });
+                    });
+
+                    response.edges.forEach(edge => {
+                        if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
+                            cy.add({
+                                group: 'edges',
+                                data: { source: edge.source, target: edge.target, label: edge.label }
+                            });
+                        }
+                    });
+
+                    cy.layout({ name: 'cose' }).run();
+                }
+            },
+            error: function (xhr) {
+                console.error('Error fetching similar reviews:', xhr.responseText);
             }
         });
     });
+});
 </script>
 
 {% endblock %}
