@@ -8,21 +8,23 @@
     <div class='row'>
         <!-- Graph on the left side -->
         <div class='col-md-8'>
-            <div id='cy' style='width: 100%; height: 600px;'></div>
+            <div id='cy' style='width: 100%; height: 600px; border: 2px solid black; border-radius: 25px;'></div>
         </div>
 
         <!-- User reviews list on the right side -->
         <div class='col-md-4'>
             <h3>My Book Reviews</h3>
-            <ul class='list-group'>
-                {% for user_review in user_reviews %}
-                    <li class='list-group-item' data-id='{{ user_review.review_id }}' data-title='{{ user_review.review_summary }}'>
-                        <strong>{{ user_review.book_title }}:</strong> {{ user_review.review_summary }}
-                    </li>
-                {% empty %}
-                    <li class='list-group-item'>No reviews yet.</li>
-                {% endfor %}
-            </ul>
+            <div style="max-height: 550px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                <ul class='list-group'>
+                    {% for user_review in user_reviews %}
+                        <li class='list-group-item' data-id='{{ user_review.review_id }}' data-title='{{ user_review.review_summary }}'>
+                            <strong>{{ user_review.book_title }}:</strong> {{ user_review.review_summary }}
+                        </li>
+                    {% empty %}
+                        <li class='list-group-item'>No reviews yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -47,7 +49,7 @@ $(document).ready(function () {
                 selector: 'node[type = "active_user"]',
                 style: {
                     'content': 'data(label)',
-                    'background-color': '#9fe300',
+                    'background-color': '#eb4034',
                     'width': 40,
                     'height': 40
                 }
@@ -56,7 +58,7 @@ $(document).ready(function () {
                 selector: 'node[type = "user"]',
                 style: {
                     'content': 'data(label)',
-                    'background-color': '#5b00e3',
+                    'background-color': '#9fe300',
                     'width': 40,
                     'height': 40
                 }
@@ -95,47 +97,23 @@ $(document).ready(function () {
             rows: 1
         }
     });
-
+    
     $('.list-group-item').click(function () {
     const reviewId = $(this).data('id');
-    const reviewSummary = $(this).data('title');
 
     if (cy.getElementById(reviewId).length === 0) {
         $.ajax({
             url: '/add_node_to_graph/',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ id: reviewId, label: reviewSummary }),
+            data: JSON.stringify({ id: reviewId}),
             headers: { 'X-CSRFToken': '{{ csrf_token }}' },
             success: function (response) {
                 if (response.status === 'success') {
                     if (cy.getElementById(reviewId).length === 0) {
                         cy.add({
                             group: 'nodes',
-                            data: { id: reviewId, label: reviewSummary, type: 'review' }
-                        });
-                    }
-
-                    // Add the book node if it exists and doesn't already exist
-                    if (response.new_nodes && response.new_nodes.length > 0) {
-                        response.new_nodes.forEach(node => {
-                            if (cy.getElementById(node.id).length === 0) {
-                                // Add the book node
-                                cy.add({
-                                    group: 'nodes',
-                                    data: { id: node.id, label: node.label, type: node.type }
-                                });
-
-                                // Add the edge between the book and the review
-                                cy.add({
-                                    group: 'edges',
-                                    data: {
-                                        source: node.id,
-                                        target: reviewId,
-                                        label: 'REVIEW'
-                                    }
-                                });
-                            }
+                            data: { id: reviewId, label: response.node.label, type: 'review' }
                         });
                     }
 
@@ -163,38 +141,78 @@ $(document).ready(function () {
 
     // Handle clicking on nodes to fetch new recommendations
     cy.on('tap', 'node', function (event) {
-        const nodeId = event.target.id();
+        const node = event.target;
+        const nodeType = node.data('type');
 
-        $.ajax({
-            url: '/get_new_recommendations/',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ id: nodeId }),
-            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-            success: function (response) {
-                if (response.status === 'success') {
-                    response.nodes.forEach(node => {
-                        if (cy.getElementById(node.id).length === 0) {
-                            cy.add({ group: 'nodes', data: { id: node.id, label: node.label } });
-                        }
-                    });
+        if (nodeType === 'review') {
+            const nodeId = node.id();
 
-                    response.edges.forEach(edge => {
-                        if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
-                            cy.add({
-                                group: 'edges',
-                                data: { source: edge.source, target: edge.target, label: edge.label }
-                            });
-                        }
-                    });
+            $.ajax({
+                url: '/get_similar_users/',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ id: nodeId }),
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        response.nodes.forEach(node => {
+                            if (cy.getElementById(node.id).length === 0) {
+                                cy.add({ group: 'nodes', data: { id: node.id, label: node.label, type:node.type } });
+                            }
+                        });
 
-                    cy.layout({ name: 'cose' }).run();
+                        response.edges.forEach(edge => {
+                            if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
+                                cy.add({
+                                    group: 'edges',
+                                    data: { source: edge.source, target: edge.target, label: edge.label }
+                                });
+                            }
+                        });
+
+                        cy.layout({ name: 'cose' }).run();
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error fetching similar reviews:', xhr.responseText);
                 }
-            },
-            error: function (xhr) {
-                console.error('Error fetching similar reviews:', xhr.responseText);
-            }
-        });
+            });
+        }
+
+        if (nodeType === 'user') {
+            const nodeId = node.id();
+
+            $.ajax({
+                url: '/get_new_recommendations/',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ id: nodeId }),
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        response.nodes.forEach(node => {
+                            if (cy.getElementById(node.id).length === 0) {
+                                cy.add({ group: 'nodes', data: { id: node.id, label: node.label, type:node.type } });
+                            }
+                        });
+
+                        response.edges.forEach(edge => {
+                            if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
+                                cy.add({
+                                    group: 'edges',
+                                    data: { source: edge.source, target: edge.target, label: edge.label }
+                                });
+                            }
+                        });
+
+                        cy.layout({ name: 'cose' }).run();
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error fetching similar reviews:', xhr.responseText);
+                }
+            });
+        }
     });
 });
 </script>
