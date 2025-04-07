@@ -22,7 +22,7 @@ books_ratings['authors'] = books_ratings['authors'].str.replace("'", '')
 books_ratings['authors'] = books_ratings['authors'].str.strip('"')
 
 ## publish year ##
-# extract the year from the 'published_date' column using the 'str.extract' method and regular expression pattern
+# extract the year from the 'publishedDate' column using the 'str.extract' method and regular expression pattern
 books_ratings['published_year'] = books_ratings['publishedDate'].str.extract(r'(\d{4})')
 
 ## categories ##
@@ -43,11 +43,11 @@ books_ratings['review/time'] = pd.to_datetime(books_ratings['review/time'], unit
 books_ratings['review_id'] = books_ratings.index + 1
 
 ## review helpfulness ratio ##
-# calculate the ratio of helpfulness for each review using the first number divided by the second number in the 'review/helpful' column split by the '/' character
+# calculate the ratio of helpfulness for each review using the first number divided by the second number in the 'review/helpfulness' column split by the '/' character
 books_ratings['helpfulness_ratio'] = books_ratings['review/helpfulness'].str.split('/').apply(lambda x: int(x[0]) / int(x[1]) if int(x[1]) != 0 else 0)
 
 ## NULL Title ##
-# drop the rows with title NaN values
+# drop the rows with Title NaN values
 books_ratings = books_ratings.dropna(subset=['Title'])
 
 ## New book data ##
@@ -61,8 +61,10 @@ books_new.columns = ['book_id', 'title', 'description', 'authors', 'image', 'pre
 
 ## New ratings data ##
 # create a new table for the ratings data
+
+# Drop duplicate reviews with same IDs 
 ratings_new = books_ratings[['review_id', 'Id', 'Title', 'Price', 'User_id', 'profileName', 'helpfulness_ratio',
-       'review/score', 'review/time', 'review/summary', 'review/text']].drop_duplicates()
+       'review/score', 'review/time', 'review/summary', 'review/text']].drop_duplicates(subset=['Id', 'review/text'])
 
 # replace column names with the new names
 ratings_new.columns = ['review_id', 'book_id', 'title', 'price', 'user_id', 'profile_name', 'helpfulness_ratio',
@@ -71,7 +73,6 @@ ratings_new.columns = ['review_id', 'book_id', 'title', 'price', 'user_id', 'pro
 # save the books and ratings data to csv files
 # books_new.to_csv('books_new.csv', index=False)
 # ratings_new.to_csv('ratings_new.csv', index=False)
-
 
 ## Write the data to a SQLite database ##
 # Create connection to SQLite
