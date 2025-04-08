@@ -1,7 +1,10 @@
 __pycache__/
 db.sqlite3
-
+data/
 venv/
 .venv
 
 .env
+
+books.db
+your_database.db

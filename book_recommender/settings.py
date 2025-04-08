@@ -30,7 +30,6 @@ def get_env_variable(var_name):
         return os.getenv(var_name)
     except KeyError as exc:
         raise ImproperlyConfigured(f"Set the {var_name} environment variable.") from exc
-    
 load_dotenv()
 
 SECRET_KEY = get_env_variable("DJANGO_SECRET_KEY")
