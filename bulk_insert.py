@@ -89,12 +89,12 @@ cursor = conn.cursor()
 books_query = '''
 Select *
 FROM books
-LIMIT 1'''
-#cursor.execute(books_query)
-#books = cursor.fetchall()
-#column_names = [desc[0] for desc in cursor.description]
+LIMIT 25000'''
+cursor.execute(books_query)
+books = cursor.fetchall()
+column_names = [desc[0] for desc in cursor.description]
 
-#insert_books(column_names, books)
+insert_books(column_names, books)
 
 users_query = '''
 SELECT user_id, MIN(profile_name) as profile_name
@@ -102,11 +102,11 @@ FROM ratings
 WHERE user_id IS NOT NULL
 GROUP BY user_id
 LIMIT 25000'''
-#cursor.execute(users_query)
-#users = cursor.fetchall()
-#column_names = [desc[0] for desc in cursor.description]
+cursor.execute(users_query)
+users = cursor.fetchall()
+column_names = [desc[0] for desc in cursor.description]
 
-#insert_users(column_names, users)
+insert_users(column_names, users)
 
 reviews_query = '''
 SELECT *
@@ -117,4 +117,4 @@ cursor.execute(reviews_query)
 reviews = cursor.fetchall()
 column_names = [desc[0] for desc in cursor.description]
 
-insert_reviews(column_names, reviews, 200)
+insert_reviews(column_names, reviews, 500)
