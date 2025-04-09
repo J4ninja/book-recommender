@@ -36,7 +36,7 @@ books_ratings['categories'] = books_ratings['categories'].str.replace("'", '')
 
 ## review time ##
 # convert "review/time" from integer to datetime
-books_ratings['review/time'] = pd.to_datetime(books_ratings['review/time'], unit='s')
+#books_ratings['review/time'] = pd.to_datetime(books_ratings['review/time'], unit='s')
 
 ## review id ##
 # create a unique identifier for each row
@@ -47,8 +47,8 @@ books_ratings['review_id'] = books_ratings.index + 1
 books_ratings['helpfulness_ratio'] = books_ratings['review/helpfulness'].str.split('/').apply(lambda x: int(x[0]) / int(x[1]) if int(x[1]) != 0 else 0)
 
 ## NULL Title ##
-# drop the rows with Title NaN values
-books_ratings = books_ratings.dropna(subset=['Title'])
+# drop the rows with Title, Book_id, or User_id NaN values
+books_ratings = books_ratings.dropna(subset=['Title', 'Id', 'User_id'])
 
 ## New book data ##
 # decompose the data into two tables: books and reviews
@@ -66,7 +66,7 @@ print(f'number of rows in dataframe {len(books_ratings)}')
 
 # Drop duplicate reviews with same IDs 
 ratings_new = books_ratings[['review_id', 'Id', 'Title', 'Price', 'User_id', 'profileName', 'helpfulness_ratio',
-       'review/score', 'review/time', 'review/summary', 'review/text']].drop_duplicates(subset=['Id', 'review/text'])
+       'review/score', 'review/time', 'review/summary', 'review/text']].drop_duplicates(subset=['Id', 'User_id'])
 
 # replace column names with the new names
 ratings_new.columns = ['review_id', 'book_id', 'title', 'price', 'user_id', 'profile_name', 'helpfulness_ratio',
