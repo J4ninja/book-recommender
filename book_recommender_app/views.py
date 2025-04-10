@@ -137,8 +137,9 @@ def recommendations(request):
     return render(request, 'recommendations.html', {'nodes': nodes, 'relationships': relationships, 
                                                     'user_node': user_node, 'user_reviews': user_reviews_with_title})
 
-@csrf_exempt
+
 def add_node_to_graph(request):
+    '''adds a review node to the graph visualization based on review_id from the review clicked in sidebar'''
     if request.method == 'POST':
         data = json.loads(request.body)
         review_id = data.get('id')
@@ -153,15 +154,25 @@ def add_node_to_graph(request):
         if user:
             edges.append({'source': user.user_id, 'target': review_id, 'label': 'WROTE_REVIEW'})
 
+        book_title = get_book_title_from_review(review)
+        node = {'id': review_id, 'label': book_title, 'type': 'review',
+            'book_title': book_title,
+            'review_summary': review.review_summary,
+            'helpfulness_ratio': review.helpfulness_ratio,
+            'review_score': review.review_score,
+            'review_time': review.review_time,
+            'review_text': review.review_text
+        }
         return JsonResponse({
             'status': 'success',
-            'node': {'id': review_id, 'label': get_book_title_from_review(review), 'type': 'review'},
+            'node': node,
             'edges': edges
         })
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 def get_similar_users(request):
+    '''gets similar users from recommender based on book review'''
     if request.method == 'POST':
         data = json.loads(request.body)
         review_id = data.get('id')
@@ -192,6 +203,7 @@ def get_similar_users(request):
             })
 
 def get_new_recommendations(request):
+    '''gets recommendations based on similar users' top rated books'''
     if request.method == 'POST':
         data = json.loads(request.body)
         user_id = data.get('id')
@@ -208,7 +220,15 @@ def get_new_recommendations(request):
 
         for user_review in user_reviews:
             if user_review:
-                nodes.append({'id': user_review.review_id, 'label': get_book_title_from_review(user_review), 'type': 'review'})
+                book_title = get_book_title_from_review(user_review)
+                nodes.append({'id': user_review.review_id, 'label': book_title, 'type': 'review',
+                    'book_title': book_title,
+                    'review_summary': user_review.review_summary,
+                    'helpfulness_ratio': user_review.helpfulness_ratio,
+                    'review_score': user_review.review_score,
+                    'review_time': user_review.review_time,
+                    'review_text': user_review.review_text
+                })
                 edges.append({'source': user_review.review_id, 'target': user.user_id, 'label': 'REVIEWED'})
 
         return JsonResponse({

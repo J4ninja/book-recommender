@@ -4,7 +4,7 @@
 <script src='https://unpkg.com/cytoscape@3.19.0/dist/cytoscape.min.js'></script>
 <script src='https://code.jquery.com/jquery-3.6.0.min.js'></script>
 
-<div class='container mt-4'>
+<div class='container fluid'>
     <div class='row'>
         <!-- Graph on the left side -->
         <div class='col-md-8'>
@@ -14,7 +14,7 @@
         <!-- User reviews list on the right side -->
         <div class='col-md-4'>
             <h3>My Book Reviews</h3>
-            <div style="max-height: 550px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+            <div style='max-height: 250px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;'>
                 <ul class='list-group'>
                     {% for user_review in user_reviews %}
                         <li class='list-group-item' data-id='{{ user_review.review_id }}' data-title='{{ user_review.review_summary }}'>
@@ -24,6 +24,10 @@
                         <li class='list-group-item'>No reviews yet.</li>
                     {% endfor %}
                 </ul>
+            </div>
+            <div id='node-info-box' style='margin-top: 10px; max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #aaa; border-radius: 5px; background-color: #f9f9f9; min-height: 80px;'>
+                <strong>Node Info:</strong>
+                <div id='node-info-content' style='margin-top: 5px;'>Hover over a node to see details here.</div>
             </div>
         </div>
     </div>
@@ -113,7 +117,10 @@ $(document).ready(function () {
                     if (cy.getElementById(reviewId).length === 0) {
                         cy.add({
                             group: 'nodes',
-                            data: { id: reviewId, label: response.node.label, type: 'review' }
+                            data: { id: reviewId, label: response.node.label, type: 'review' , 'book_title': response.node.book_title,
+                                'review_summary': response.node.review_summary, 'helpfulness_ratio': response.node.helpfulness_ratio,
+                                'review_score': response.node.review_score, 'review_time': response.node.review_time, 'review_text': response.node.review_text
+                            }
                         });
                     }
 
@@ -137,9 +144,38 @@ $(document).ready(function () {
     }
 });
 
+    cy.on('mouseover', 'node', function (event) {
+        const node = event.target;
+        const type = node.data('type');
+        let html = '';
 
+        if (type === 'user' || type === 'active_user') {
+            html = `
+                <strong>Profile Name:</strong> ${node.data('profile_name') || node.data('label')}<br>
+                <strong>Type:</strong> ${type === 'active_user' ? 'Active User' : 'User'}
+            `;
+        } else if (type === 'review') {
+            html = `
+                <strong>Book:</strong> ${node.data('book_title') || 'huh'}<br>
+                <strong>Summary:</strong> ${node.data('review_summary') || 'wtf'}<br>
+                <strong>Review:</strong> ${node.data('review_text') || '??'}
+            `;
+        } else if (type === 'book') {
+            html = `
+                <strong>Book Title:</strong> ${node.data('label')}
+            `;
+        } else {
+            html = `<strong>Node:</strong> ${node.data('label')}`;
+        }
 
-    // Handle clicking on nodes to fetch new recommendations
+        $('#node-info-content').html(html);
+    });
+
+    //cy.on('mouseout', 'node', function () {
+    //    $('#node-info-content').html('Hover over a node to see details here.');
+    //});
+
+    // on node click, get similar authors and add to graph
     cy.on('tap', 'node', function (event) {
         const node = event.target;
         const nodeType = node.data('type');
@@ -162,6 +198,7 @@ $(document).ready(function () {
                         });
 
                         response.edges.forEach(edge => {
+                            console.log(edge.source,edge.target,edge.label)
                             if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
                                 cy.add({
                                     group: 'edges',
@@ -192,12 +229,18 @@ $(document).ready(function () {
                     if (response.status === 'success') {
                         response.nodes.forEach(node => {
                             if (cy.getElementById(node.id).length === 0) {
-                                cy.add({ group: 'nodes', data: { id: node.id, label: node.label, type:node.type } });
+                                console.log(node.review_id)
+                                cy.add({ group: 'nodes', data: { id: node.id, label:node.label, type: 'review' , 'book_title': node.book_title,
+                                'review_summary': node.review_summary, 'helpfulness_ratio': node.helpfulness_ratio,
+                                'review_score': node.review_score, 'review_time': node.review_time, 'review_text': node.review_text
+                            } });
                             }
                         });
 
                         response.edges.forEach(edge => {
+                            console.log(edge.source,edge.target,edge.label)
                             if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
+                                
                                 cy.add({
                                     group: 'edges',
                                     data: { source: edge.source, target: edge.target, label: edge.label }

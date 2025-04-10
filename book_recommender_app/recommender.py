@@ -1,6 +1,6 @@
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from .models import Book, Review, User
+from .models import Review
 from neomodel import db
 
 def get_book_title_from_review(review):
@@ -20,7 +20,7 @@ def get_reviews_to_compare(review):
 
     results, _ = db.cypher_query(query, {'review_id': review.review_id})
 
-    return [review.inflate(row[0]) for row in results]
+    return [Review.inflate(row[0]) for row in results]
 
 def find_similar_reviews(review):
     '''given a review, returns a list object, with each element containing a list of [similar_review, reviewer]'''
