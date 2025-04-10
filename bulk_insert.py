@@ -10,7 +10,7 @@ from book_recommender_app.models import Book, User, Review
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'book_recommender.settings')
 django.setup()
 
-def insert_books(columns, query_results):
+def insert_books(columns, query_results, batch_size):
     books_data = [dict(zip(columns, book)) for book in query_results]
 
     books_insert_query = '''
@@ -29,10 +29,12 @@ def insert_books(columns, query_results):
         b.ratings_count = row.ratings_count
     RETURN b
     '''
+    for i in range(0, len(books_data), batch_size):
+        batch = books_data[i:i+batch_size]  # i have to split the load operation into smaller chunks here
+        db.cypher_query(books_insert_query, {"batch": batch})
+        print(f"Inserted batch {i // batch_size + 1} with {len(batch)} reviews.")
 
-    db.cypher_query(books_insert_query, {'batch': books_data})
-
-def insert_users(columns, query_results):
+def insert_users(columns, query_results, batch_size):
     users_data = [dict(zip(columns, user)) for user in query_results]
 
     users_insert_query = '''
@@ -41,8 +43,10 @@ def insert_users(columns, query_results):
         SET u.profile_name = row.profile_name
         RETURN u
         '''
-
-    db.cypher_query(users_insert_query, {'batch': users_data})
+    for i in range(0, len(users_data), batch_size):
+        batch = users_data[i:i+batch_size]  # i have to split the load operation into smaller chunks here
+        db.cypher_query(users_insert_query, {"batch": batch})
+        print(f"Inserted batch {i // batch_size + 1} with {len(batch)} reviews.")
 
 def insert_reviews(columns, query_results, batch_size):
     model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -94,7 +98,7 @@ cursor.execute(books_query)
 books = cursor.fetchall()
 column_names = [desc[0] for desc in cursor.description]
 
-insert_books(column_names, books)
+insert_books(column_names, books, 500)
 
 users_query = '''
 SELECT user_id, MIN(profile_name) as profile_name
@@ -106,7 +110,7 @@ cursor.execute(users_query)
 users = cursor.fetchall()
 column_names = [desc[0] for desc in cursor.description]
 
-insert_users(column_names, users)
+insert_users(column_names, users, 500)
 
 reviews_query = '''
 SELECT *
@@ -117,4 +121,4 @@ cursor.execute(reviews_query)
 reviews = cursor.fetchall()
 column_names = [desc[0] for desc in cursor.description]
 
-insert_reviews(column_names, reviews, 500)
+insert_reviews(column_names, reviews, 200)
