@@ -1,7 +1,113 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Book Recommender - Home{% endblock %}
 
 {% block content %}
-Home Page 
+<div class="container py-5">
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 mb-4">Book Recommender</h1>
+            <p class="lead">Discover your next favorite book using our advanced graph-based recommendation engine</p>
+            <div class="d-flex justify-content-center mt-4">
+                <a href="{% url 'recommendations' %}" class="btn btn-primary btn-lg px-4 me-md-2">Get Recommendations</a>
+                <a href="{% url 'search' %}" class="btn btn-outline-secondary btn-lg px-4">Search Books</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="card-title h3 mb-3">About Us</h2>
+                    <p class="card-text">This book recommendation system connects readers with books they'll love by analyzing patterns in user reviews and preferences. By leveraging the power of graph databases with Neo4j, we create a web of connections between books, reviews, and readers.</p>
+                    <p class="card-text">Key features of our recommendation system:</p>
+                    <ul>
+                        <li>Personalized book recommendations based on your reviews</li>
+                        <li>Discover similar readers with matching tastes</li>
+                        <li>Explore connections between books in an interactive graph visualization</li>
+                        <li>Find highly rated books across different genres and topics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mt-4 mt-md-0">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="card-title h3 mb-3">How It Works</h2>
+                    <p class="card-text">Our recommendation algorithm uses modern NLP techniques to overcome the limitations of traditional recommendation systems:</p>
+                    <ol>
+                        <li><strong>Sentence Transformers (SBERT)</strong> - We use state-of-the-art SBERT models to create rich semantic embeddings of book reviews, capturing nuanced preferences beyond simple keywords.</li>
+                        <li><strong>Graph-Based Recommendations</strong> - By representing relationships between users, reviews, and books as a graph, we traverse connections to find relevant recommendations that avoid content bubbles.</li>
+                        <li><strong>Semantic Similarity Analysis</strong> - Rather than simply matching users to similar content they've already read, our system can identify conceptually related books that expand reading horizons.</li>
+                    </ol>
+                    <p class="card-text">Unlike traditional content-based and collaborative filtering approaches that can trap users in "content bubbles," our SBERT-powered system understands the deeper meaning in reviews. This helps users discover relevant but diverse books they might not find otherwise.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title h3 mb-3">Technical Implementation</h2>
+                    <p>The recommendation system is built with the following technologies:</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul>
+                                <li><strong>NEO4J Graph Model:</strong>
+                                    <ul>
+                                        <li>Book nodes - Store book metadata</li>
+                                        <li>User nodes - Represent readers</li>
+                                        <li>Review nodes - Connect users to books with ratings and comments</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul>
+                                <li><strong>Algorithms:</strong>
+                                    <ul>
+                                        <li>Cosine similarity for review comparison</li>
+                                        <li>Graph traversals for finding connections</li>
+                                        <li>Rating-weighted recommendations</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Visualization:</strong> Interactive graph using Cytoscape.js</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border-radius: 10px;
+        transition: transform 0.3s;
+        border: none;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .shadow-sm {
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
+    }
+    
+    h1, h2, h3 {
+        font-weight: 600;
+    }
+    
+    .lead {
+        font-size: 1.25rem;
+        font-weight: 300;
+    }
+</style>
 {% endblock %}
