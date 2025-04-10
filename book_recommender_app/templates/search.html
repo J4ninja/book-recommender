@@ -1,28 +1,262 @@
 {% extends "base.html" %}
 
-{% block title %}Book List{% endblock %}
+{% block title %}Book Search{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-container {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .book-img {
+        max-height: 80px;
+        max-width: 60px;
+        object-fit: cover;
+    }
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    .filter-badge {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    select.form-select {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* Fix for dropdown options */
+    select.form-select option {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 50%;
+    }
+    .category-suggestions {
+        position: absolute;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #ced4da;
+        border-radius: 0 0 0.25rem 0.25rem;
+        z-index: 1000;
+        display: none;
+    }
+    .category-suggestion-item {
+        padding: 0.5rem;
+        cursor: pointer;
+    }
+    .category-suggestion-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <h2>Book List</h2>
+<div class="container">
+    <h1 class="mb-4">Book Search</h1>
+    
+    <div class="search-container">
+        <form method="GET" action="{% url 'search' %}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search|default:'' }}" placeholder="Search by title or author">
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="category" class="form-label">Category</label>
+                    <div class="position-relative">
+                        <input type="text" class="form-control" id="category" name="category" value="{{ request.GET.category|default:'' }}" placeholder="Enter category" autocomplete="off">
+                        <div id="category-suggestions" class="category-suggestions"></div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="year" class="form-label">Published Year</label>
+                    <select class="form-select" id="year" name="year">
+                        <option value="">All Years</option>
+                        {% for year in years %}
+                            <option value="{{ year }}" {% if request.GET.year == year %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="{% url 'search' %}" class="btn btn-outline-secondary ms-2">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    {% if request.GET.search or request.GET.category or request.GET.year %}
+    <div class="mb-3">
+        <h5>Active filters:</h5>
+        {% if request.GET.search %}
+            <span class="badge bg-primary filter-badge">Search: {{ request.GET.search }}</span>
+        {% endif %}
+        {% if request.GET.category %}
+            <span class="badge bg-info filter-badge">Category: {{ request.GET.category }}</span>
+        {% endif %}
+        {% if request.GET.year %}
+            <span class="badge bg-secondary filter-badge">Year: {{ request.GET.year }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
     
     {% if books %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Author</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for book in books %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
                     <tr>
-                        <td>{{ book.title }}</td>
-                        <td>{{ book.authors }}</td>
+                        <th>Cover</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Year</th>
+                        <th>Category</th>
+                        <th>Actions</th>
                     </tr>
+                </thead>
+                <tbody>
+                    {% for book in books %}
+                        <tr>
+                            <td>
+                                {% if book.image %}
+                                    <img src="{{ book.image }}" alt="{{ book.title }}" class="book-img">
+                                {% else %}
+                                    <div class="book-img bg-light d-flex align-items-center justify-content-center">
+                                        <span class="text-muted small">No image</span>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ book.title }}</td>
+                            <td>{{ book.authors }}</td>
+                            <td>{{ book.published_year|default:"Unknown" }}</td>
+                            <td>{{ book.categories|default:"Uncategorized" }}</td>
+                            <td>
+                                {% if book.preview_link %}
+                                    <a href="{{ book.preview_link }}" target="_blank" class="btn btn-sm btn-outline-primary">Preview</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for i in page_range %}
+                    {% if i == page_obj.number %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% elif i == '...' %}
+                        <li class="page-item disabled"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                        </li>
+                    {% endif %}
                 {% endfor %}
-            </tbody>
-        </table>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <p class="text-center text-muted">
+            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} books
+        </p>
     {% else %}
-        <div class="alert alert-info">No books available.</div>
+        <div class="alert alert-info">No books found matching your criteria.</div>
     {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Store all categories for client-side filtering
+    const allCategories = [
+        {% for category in categories %}
+            "{{ category|escapejs }}",
+        {% endfor %}
+    ];
+    
+    // Category autocomplete functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryInput = document.getElementById('category');
+        const suggestionBox = document.getElementById('category-suggestions');
+        
+        // Show suggestions when input is focused
+        categoryInput.addEventListener('focus', function() {
+            updateSuggestions(this.value);
+        });
+        
+        // Update suggestions as user types
+        categoryInput.addEventListener('input', function() {
+            updateSuggestions(this.value);
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target !== categoryInput && e.target !== suggestionBox) {
+                suggestionBox.style.display = 'none';
+            }
+        });
+        
+        function updateSuggestions(query) {
+            // Filter categories based on input
+            query = query.toLowerCase();
+            const filteredCategories = allCategories.filter(category => 
+                category.toLowerCase().includes(query)
+            ).slice(0, 10); // Limit to 10 suggestions for performance
+            
+            // Display suggestions
+            if (filteredCategories.length > 0 && query.length > 0) {
+                suggestionBox.innerHTML = '';
+                filteredCategories.forEach(category => {
+                    const div = document.createElement('div');
+                    div.className = 'category-suggestion-item';
+                    div.textContent = category;
+                    div.addEventListener('click', function() {
+                        categoryInput.value = category;
+                        suggestionBox.style.display = 'none';
+                    });
+                    suggestionBox.appendChild(div);
+                });
+                suggestionBox.style.display = 'block';
+            } else {
+                suggestionBox.style.display = 'none';
+            }
+        }
+    });
+</script>
 {% endblock %}
