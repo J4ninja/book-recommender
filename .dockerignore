@@ -27,5 +27,3 @@ dist/
 *.ipynb
 notebooks/
 data/
-!data/books_new.csv
-!data/ratings_new.csv
