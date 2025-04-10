@@ -47,11 +47,20 @@ The Django uses a connection to a cloud hosted neo4j instance. Add the following
 Thes project consists of two databases, a SQLITE database for visualizations, and a NEO4J graph database for efficient graph queries.
 The NEO4J databse is hosted in the cloud and does not require any additional set up, but the SQLITE dataabse is local and will need to be created and loaded with clean data.
 
-0. Prerequsite: Download the Amazon Book Reviews dataset from https://www.kaggle.com/datasets/mohamedbakhet/amazon-books-reviews.
+0. Prerequsite: Have python installed and download the Amazon Book Reviews dataset from https://www.kaggle.com/datasets/mohamedbakhet/amazon-books-reviews.
 1. Create a folder in the project directory call "data".
 2. Unzip the downloaded zip file and drop both books_data.csv and Books_rating.csv into "data".
-3. From the command line in the Dev Container, run "python data_clean.py". This will output cleaned csvs called books_new.csv and ratings_new.csv into the previously created "data" folder. The script    will print status updates to the terminal, as well as a confirmation of "csvs created" when complete.
-4. Once complete, in Dev Container, run "python load_db.py". This will create the database and tables and load data from the clean csvs into the SQLITE database. This script also will print status updates as well as a "Database setup complete" message once finished.
+3. Inside the Dev Container, on the command line run
+
+         python data_clean.py
+
+    This will output cleaned csvs called books_new.csv and ratings_new.csv into the previously created "data" folder. 
+
+4. Inside the Dev Container, once complete run 
+
+        python load_db.py 
+
+    This will create the database and tables and load data from the clean csvs into the SQLITE database. This script also will print status updates as well as a "Database setup complete" message once finished.
 
 ## Running the Application
 1. Open project in Dev Container

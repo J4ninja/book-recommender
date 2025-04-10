@@ -15,6 +15,65 @@
         </div>
     </div>
 
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Top Rated Books</h2>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
+        {% if top_books %}
+            {% for book in top_books %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        {% if book.image %}
+                            <img src="{{ book.image }}" class="card-img-top" alt="{{ book.title }}">
+                        {% else %}
+                            <div class="bg-light text-center py-5">
+                                <span class="text-muted">No image available</span>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ book.title|truncatechars:50 }}</h5>
+                            <p class="text-muted">{{ book.authors|truncatechars:40 }}</p>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="text-warning me-1">
+                                    <!-- Generate stars based on rating -->
+                                    {% with ''|center:book.avg_rating|make_list as stars %}
+                                        {% for _ in stars %}
+                                            <i class="bi bi-star-fill"></i>
+                                        {% endfor %}
+                                        <!-- Add half star if needed -->
+                                        {% if book.avg_rating|floatformat:1|slice:"-1:" == "5" %}
+                                            <i class="bi bi-star-half"></i>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                                <small class="text-muted ms-1">{{ book.avg_rating }} ({{ book.review_count }} reviews)</small>
+                            </div>
+                            {% if book.preview_link %}
+                                <a href="{{ book.preview_link }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">Preview</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No book ratings available yet. Start reviewing books to see top recommendations!
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Add a "View More" button -->
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <a href="{% url 'search' %}" class="btn btn-primary">View More Books</a>
+        </div>
+    </div>
+
     <div class="row mb-5">
         <div class="col-md-6">
             <div class="card shadow-sm h-100">
@@ -82,6 +141,8 @@
             </div>
         </div>
     </div>
+
+    
 </div>
 {% endblock %}
 
