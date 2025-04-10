@@ -11,7 +11,7 @@ def index(request):
 
 def test_data_models(request):
     '''Returns all books'''
-    return render(request, 'test_data_models.html', {'books': Book.nodes.all()})
+    return render(request, 'search.html', {'books': Book.nodes.all()})
 
 def recommendations(request):
     '''renders graph template with user node added and list of user reviews'''

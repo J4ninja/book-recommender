@@ -50,7 +50,7 @@ The NEO4J databse is hosted in the cloud and does not require any additional set
 0. Prerequsite: Download the Amazon Book Reviews dataset from https://www.kaggle.com/datasets/mohamedbakhet/amazon-books-reviews.
 1. Create a folder in the project directory call "data".
 2. Unzip the downloaded zip file and drop both books_data.csv and Books_rating.csv into "data".
-3. From the command line in the Dev Container, run "python data_clean.py". This will output cleaned csvs called books_new.csv and ratings_new.csv into the previously created "data" folder. The script    will print status updates to the terminal, as well as a confirmation of "csvs created" when complete.
+3. From the command line, (not in Dev Container) run "python data_clean.py". This will output cleaned csvs called books_new.csv and ratings_new.csv into the previously created "data" folder. 
 4. Once complete, in Dev Container, run "python load_db.py". This will create the database and tables and load data from the clean csvs into the SQLITE database. This script also will print status updates as well as a "Database setup complete" message once finished.
 
 ## Running the Application
