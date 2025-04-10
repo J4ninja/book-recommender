@@ -8,8 +8,27 @@ from .models import Book, Review, User
 from .recommender import get_book_title_from_review, find_similar_reviews, get_highest_rated_reviews
 
 def index(request):
-    '''Home Page view'''
-    return render(request, 'index.html')
+    '''Home Page view with top-rated books'''
+    # Query for top-rated books
+    cypher_query = """
+    MATCH (b:Book)<-[:REVIEWS]-(r:Review)
+    WITH b, AVG(r.review_score) as avg_rating, COUNT(r) as review_count
+    WHERE review_count >= 5  // Only include books with at least 5 reviews
+    RETURN b, avg_rating, review_count
+    ORDER BY avg_rating DESC, review_count DESC
+    LIMIT 4  // Show top 4 books
+    """
+    
+    results, meta = db.cypher_query(cypher_query)
+    
+    top_books = []
+    for record in results:
+        book = Book.inflate(record[0])
+        book.avg_rating = round(record[1], 1)  # Round to 1 decimal place
+        book.review_count = record[2]
+        top_books.append(book)
+    
+    return render(request, 'index.html', {'top_books': top_books})
 
 def search(request):
     '''Search and filter books with pagination'''
