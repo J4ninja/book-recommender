@@ -2,16 +2,119 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from neomodel import db
 from .models import Book, Review, User
 from .recommender import get_book_title_from_review, find_similar_reviews, get_highest_rated_reviews
 
 def index(request):
-    '''Home Page view'''
-    return render(request, 'index.html')
+    '''Home Page view with top-rated books'''
+    # Query for top-rated books
+    cypher_query = """
+    MATCH (b:Book)<-[:REVIEWS]-(r:Review)
+    WITH b, AVG(r.review_score) as avg_rating, COUNT(r) as review_count
+    WHERE review_count >= 5  // Only include books with at least 5 reviews
+    RETURN b, avg_rating, review_count
+    ORDER BY avg_rating DESC, review_count DESC
+    LIMIT 4  // Show top 4 books
+    """
+    
+    results, meta = db.cypher_query(cypher_query)
+    
+    top_books = []
+    for record in results:
+        book = Book.inflate(record[0])
+        book.avg_rating = round(record[1], 1)  # Round to 1 decimal place
+        book.review_count = record[2]
+        top_books.append(book)
+    
+    return render(request, 'index.html', {'top_books': top_books})
 
-def test_data_models(request):
-    '''Returns all books'''
-    return render(request, 'test_data_models.html', {'books': Book.nodes.all()})
+def search(request):
+    '''Search and filter books with pagination'''
+    # Get filter parameters from request
+    search_query = request.GET.get('search', '')
+    category_filter = request.GET.get('category', '')
+    year_filter = request.GET.get('year', '')
+    page = request.GET.get('page', 1)
+    
+    query_params = {}
+    cypher_query = "MATCH (b:Book) WHERE 1=1"
+    
+    if search_query:
+        cypher_query += " AND (b.title =~ $search_pattern OR b.authors =~ $search_pattern)"
+        query_params['search_pattern'] = f"(?i).*{search_query}.*"
+    
+    if category_filter:
+        cypher_query += " AND b.categories =~ $category_pattern"
+        query_params['category_pattern'] = f"(?i).*{category_filter}.*"
+    
+    if year_filter:
+        cypher_query += " AND b.published_year = $year"
+        query_params['year'] = int(year_filter)
+    
+    cypher_query += " RETURN b ORDER BY b.title LIMIT 1000"  # Limit to prevent excessive memory usage
+    results, meta = db.cypher_query(cypher_query, query_params)
+    
+    all_books = [Book.inflate(row[0]) for row in results]
+    
+    categories_query = "MATCH (b:Book) RETURN DISTINCT b.categories ORDER BY b.categories"
+    years_query = "MATCH (b:Book) WHERE b.published_year IS NOT NULL RETURN DISTINCT b.published_year ORDER BY b.published_year DESC"
+    
+    categories_results, _ = db.cypher_query(categories_query)
+    years_results, _ = db.cypher_query(years_query)
+    
+    categories = [row[0] for row in categories_results if row[0]]
+    years = [str(row[0]) for row in years_results if row[0]]
+    
+    paginator = Paginator(all_books, 10)  # Show 10 books per page
+    
+    try:
+        books = paginator.page(page)
+    except PageNotAnInteger:
+        books = paginator.page(1)
+    except EmptyPage:
+        books = paginator.page(paginator.num_pages)
+    
+    page_range = get_page_range(books)
+    
+    return render(request, 'search.html', {
+        'books': books,
+        'page_obj': books,
+        'page_range': page_range,
+        'categories': categories,
+        'years': years
+    })
+
+def get_page_range(page_obj, delta=2):
+    """Create a pagination range with ellipsis for large number of pages"""
+    paginator = page_obj.paginator
+    page_number = page_obj.number
+    num_pages = paginator.num_pages
+    
+    # Always include first and last page
+    if num_pages <= (delta * 2 + 5):
+        # If not many pages, show all
+        return range(1, num_pages + 1)
+    
+    page_range = []
+    
+    page_range.append(1)
+
+    if page_number - delta > 2:
+        page_range.append('...')
+    
+    start_range = max(2, page_number - delta)
+    end_range = min(num_pages - 1, page_number + delta)
+    page_range.extend(range(start_range, end_range + 1))
+    
+    if page_number + delta < num_pages - 1:
+        page_range.append('...')
+    
+    if num_pages > 1:
+        page_range.append(num_pages)
+    
+    return page_range
 
 def recommendations(request):
     '''renders graph template with user node added and list of user reviews'''
