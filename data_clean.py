@@ -66,14 +66,17 @@ print(f'number of rows in dataframe {len(books_ratings)}')
 
 # Drop duplicate reviews with same IDs 
 ratings_new = books_ratings[['review_id', 'Id', 'Title', 'Price', 'User_id', 'profileName', 'helpfulness_ratio',
-       'review/score', 'review/time', 'review/summary', 'review/text']].drop_duplicates(subset=['Id', 'User_id'])
+       'review/score', 'review/time', 'review/summary', 'review/text']].drop_duplicates(subset=['Id', 'User_id']).drop_duplicates(subset=['Title', 'User_id'])
 
 # replace column names with the new names
 ratings_new.columns = ['review_id', 'book_id', 'title', 'price', 'user_id', 'profile_name', 'helpfulness_ratio',
        'review_score', 'review_time', 'review_summary', 'review_text']
+
+ratings_new_sample = ratings_new.head(10000)
 
 print(f'number of rows in dataframe after removing duplicates {len(ratings_new)}')
 
 # save the books and ratings data to csv files
 books_new.to_csv('data/books_new.csv', index=False)
 ratings_new.to_csv('data/ratings_new.csv', index=False)
+ratings_new_sample.to_csv('data/ratings_new_sample.csv', index=False)
