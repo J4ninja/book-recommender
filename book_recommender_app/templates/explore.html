@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class='container fluid'>
+    <div class='row'>
+        <div class='col-md-12'>
+            {{ top_books|safe }}
+        </div>
+    </div>
+    <div class='row'>
+        <div class='col-md-6'>
+            {{ ratings_distribution|safe }}
+        </div>
+        <div class='col-md-6'>
+            {{ reviews_over_time|safe }}
+        </div>
+    </div>
+</div>
+{% endblock %}

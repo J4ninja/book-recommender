@@ -39,7 +39,6 @@ def find_similar_reviews(review):
             most_similar_reviews.append([similar_review, reviewer])
         if len(most_similar_reviews) == 5:
             break
-    print(most_similar_reviews)
     return most_similar_reviews
 
 def get_highest_rated_reviews(user):

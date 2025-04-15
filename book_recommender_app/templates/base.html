@@ -38,6 +38,9 @@
                         <a class="nav-link {% if request.path == '/recommendations/' %}active{% endif %}" href="{% url 'recommendations' %}">Recommendations</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/explore/' %}active{% endif %}" href="{% url 'explore' %}">Explore</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.path == '/search/' %}active{% endif %}" href="{% url 'search' %}">Search</a>
                     </li>
                 </ul>

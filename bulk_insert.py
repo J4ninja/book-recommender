@@ -115,13 +115,21 @@ def insert_reviews(tx, batch):
 
 # === Batch Runner ===
 
-def process_in_batches(data, batch_size, insert_fn, label):
+def process_in_batches(data, batch_size, insert_fn, label, model=None, embed_key=None):
     start_batch = load_checkpoint(label)
     total_batches = (len(data) + batch_size - 1) // batch_size
 
     with driver.session() as session:
         for i in range(start_batch * batch_size, len(data), batch_size):
             batch = data[i:i+batch_size]
+
+            # Optional embedding step
+            if model and embed_key:
+                texts = [item.get(embed_key, '') or '' for item in batch]
+                embeddings = model.encode(texts, batch_size=128, convert_to_numpy=True).tolist()
+                for item, emb in zip(batch, embeddings):
+                    item['embedding'] = emb
+
             session.execute_write(insert_fn, batch)
             print(f'[{label}] Inserted batch {i // batch_size + 1} of {total_batches} ({len(batch)} records)')
             save_checkpoint(label, i // batch_size + 1)
@@ -130,62 +138,47 @@ def process_in_batches(data, batch_size, insert_fn, label):
 # === Load Data from SQLite ===
 
 def main():
+    skip_users_books = True
     create_indexes_and_constraints()
 
     conn = sqlite3.connect('books.db')
     cursor = conn.cursor()
 
-    # Books
-    print('query book table')
-    cursor.execute('SELECT * FROM books')
-    books = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    process_in_batches(books, 1000, insert_books, label='books')
+    if  not skip_users_books:
+        # Books
+        print('query book table')
+        cursor.execute('SELECT * FROM books')
+        books = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+        process_in_batches(books, 1000, insert_books, label='books')
 
-    # Users
-    print('query reviews for users')
-    cursor.execute('''
-        SELECT user_id, MIN(profile_name) as profile_name
-        FROM ratings
-        WHERE user_id IS NOT NULL
-        GROUP BY user_id
-    ''')
-    users = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    process_in_batches(users, 1000, insert_users, label='users')
+        # Users
+        print('query reviews for users')
+        cursor.execute('''
+            SELECT user_id, MIN(profile_name) as profile_name
+            FROM ratings
+            WHERE user_id IS NOT NULL
+            GROUP BY user_id
+        ''')
+        users = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+        process_in_batches(users, 1000, insert_users, label='users')
 
     # Reviews
     print('query reviews table')
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    columns = [col[0] for col in cursor.description]
     cursor.execute('SELECT * FROM ratings')
-
-    batch = []
-    batch_size = 500
-    batch_index = load_checkpoint('reviews')
-
-    # Skip already processed batches
-    for _ in range(batch_index * batch_size):
-        cursor.fetchone()
-
-    while True:
-        row = cursor.fetchone()
-        if row is None:
-            break
-
-        review = dict(zip(columns, row))
-        review_text = review.get('review_text', '') or ''
-        review['embedding'] = model.encode(review_text).tolist()
-        batch.append(review)
-
-        if len(batch) == batch_size:
-            process_in_batches(batch, batch_size, insert_reviews, label='reviews')
-            batch.clear()
-
-    # Final leftover
-    if batch:
-        process_in_batches(batch, batch_size, insert_reviews, label='reviews')
+    reviews = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    
+    process_in_batches(
+        reviews,
+        batch_size=500,
+        insert_fn=insert_reviews,
+        label='reviews',
+        model=model,
+        embed_key='review_text'
+    )
 
     driver.close()
     conn.close()
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
     main()
