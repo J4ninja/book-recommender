@@ -53,7 +53,7 @@ CREATE TABLE ratings (
     profile_name TEXT,
     helpfulness_ratio REAL,
     review_score REAL NOT NULL,
-    review_time DATE,
+    review_time INTEGER,
     review_summary TEXT,
     review_text TEXT,
     FOREIGN KEY (book_id) REFERENCES books(book_id)

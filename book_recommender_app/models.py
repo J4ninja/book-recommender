@@ -29,7 +29,7 @@ class Review(DjangoNode):
     review_summary = StringProperty()
     review_text = StringProperty()
     embedding = ArrayProperty(FloatProperty())
-    
+ 
     reviewed_book = RelationshipTo('Book', 'REVIEWS')
     written_by = RelationshipFrom('User', 'WROTE_REVIEW')
     similar_to = RelationshipTo('Review', 'SIMILAR')

@@ -4,7 +4,7 @@
 <script src='https://unpkg.com/cytoscape@3.19.0/dist/cytoscape.min.js'></script>
 <script src='https://code.jquery.com/jquery-3.6.0.min.js'></script>
 
-<div class='container mt-4'>
+<div class='container fluid'>
     <div class='row'>
         <!-- Graph on the left side -->
         <div class='col-md-8'>
@@ -14,7 +14,7 @@
         <!-- User reviews list on the right side -->
         <div class='col-md-4'>
             <h3>My Book Reviews</h3>
-            <div style="max-height: 550px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+            <div style='max-height: 250px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;'>
                 <ul class='list-group'>
                     {% for user_review in user_reviews %}
                         <li class='list-group-item' data-id='{{ user_review.review_id }}' data-title='{{ user_review.review_summary }}'>
@@ -25,11 +25,35 @@
                     {% endfor %}
                 </ul>
             </div>
+            <div id='node-info-box' style='margin-top: 10px; max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #aaa; border-radius: 5px; background-color: #f9f9f9; min-height: 80px;'>
+                <strong>Node Info:</strong>
+                <div id='node-info-content' style='margin-top: 5px;'>Hover over a node to see details here.</div>
+            </div>
         </div>
     </div>
+    <div class='row mt-2'>
+        <div class='col-md-12'>
+            <div id='legend' style='width: 100%; border: 2px solid black; border-radius: 25px; padding: 12px; background-color: #f5f5f5; font-size: 1.1rem;'>
+                <div><strong>How to Use:</strong> Click a book review on the right to add it to the graph. <br> 
+                    Click a <span style="color: #0400e3;"><strong>review</strong></span> node to find similar users. 
+                    Click a <span style="color: #9fe300;"><strong>user</strong></span> node to get book recommendations.
+                </div>
+                <div style="margin-top: 10px;"><strong>Legend:</strong></div>
+                <ul style="list-style: none; padding-left: 0; margin-bottom: 0; display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                    <li><span style="display:inline-block; width: 14px; height: 14px; background-color: #eb4034; border-radius: 50%; margin-right: 6px;"></span>Active User</li>
+                    <li><span style="display:inline-block; width: 14px; height: 14px; background-color: #9fe300; border-radius: 50%; margin-right: 6px;"></span>User</li>
+                    <li><span style="display:inline-block; width: 14px; height: 14px; background-color: #0400e3; border-radius: 50%; margin-right: 6px;"></span>Book Review</li>
+                </ul>
+            </div>
+        </div>
+    </div>    
 </div>
 
 <script>
+function truncateWithEllipsis(str, maxLength) {
+  return str.length <= maxLength ? str : str.slice(0, maxLength - 3) + '...';
+}
+
 $(document).ready(function () {
     const nodes = {{ nodes|safe }};
     const relationships = {{ relationships|safe }};
@@ -51,7 +75,12 @@ $(document).ready(function () {
                     'content': 'data(label)',
                     'background-color': '#eb4034',
                     'width': 40,
-                    'height': 40
+                    'height': 40,
+                    'font-size': 10,
+                    'text-wrap': 'none',
+                    'text-max-width': '60px',
+                    'text-overflow-wrap': 'ellipsis'
+
                 }
             },
             {
@@ -60,7 +89,11 @@ $(document).ready(function () {
                     'content': 'data(label)',
                     'background-color': '#9fe300',
                     'width': 40,
-                    'height': 40
+                    'height': 40,
+                    'font-size': 10,
+                    'text-wrap': 'none',
+                    'text-max-width': '60px',
+                    'text-overflow-wrap': 'ellipsis'
                 }
             },
             {
@@ -69,7 +102,11 @@ $(document).ready(function () {
                     'content': 'data(label)',
                     'background-color': '#00e339',
                     'width': 40,
-                    'height': 40
+                    'height': 40,
+                    'font-size': 10,
+                    'text-wrap': 'none',
+                    'text-max-width': '60px',
+                    'text-overflow-wrap': 'ellipsis'
                 }
             },
             {
@@ -78,7 +115,11 @@ $(document).ready(function () {
                     'content': 'data(label)',
                     'background-color': '#0400e3',
                     'width': 40,
-                    'height': 40
+                    'height': 40,
+                    'font-size': 10,
+                    'text-wrap': 'none',
+                    'text-max-width': '60px',
+                    'text-overflow-wrap': 'ellipsis'
                 }
             },
             {
@@ -93,8 +134,7 @@ $(document).ready(function () {
         ],
 
         layout: {
-            name: 'grid',
-            rows: 1
+            name: 'cose'
         }
     });
     
@@ -113,7 +153,10 @@ $(document).ready(function () {
                     if (cy.getElementById(reviewId).length === 0) {
                         cy.add({
                             group: 'nodes',
-                            data: { id: reviewId, label: response.node.label, type: 'review' }
+                            data: { id: reviewId, label: response.node.label, type: 'review' , 'book_title': response.node.book_title,
+                                'review_summary': response.node.review_summary, 'helpfulness_ratio': response.node.helpfulness_ratio,
+                                'review_score': response.node.review_score, 'review_time': response.node.review_time, 'review_text': response.node.review_text
+                            }
                         });
                     }
 
@@ -137,9 +180,39 @@ $(document).ready(function () {
     }
 });
 
+    cy.on('mouseover', 'node', function (event) {
+        const node = event.target;
+        const type = node.data('type');
+        let html = '';
 
+        if (type === 'user' || type === 'active_user') {
+            html = `
+                <strong>Profile Name:</strong> ${node.data('profile_name') || node.data('label')}<br>
+                <strong>Type:</strong> ${type === 'active_user' ? 'Active User' : 'User'}
+            `;
+        } else if (type === 'review') {
+            html = `
+                <strong>Book:</strong> ${node.data('book_title') || ''}<br>
+                <strong>Rating:</strong> ${node.data('review_score') || ''}<br>
+                <strong>Summary:</strong> ${node.data('review_summary') || ''}<br>
+                <strong>Review:</strong> ${node.data('review_text') || ''}
+            `;
+        } else if (type === 'book') {
+            html = `
+                <strong>Book Title:</strong> ${node.data('label')}
+            `;
+        } else {
+            html = `<strong>Node:</strong> ${node.data('label')}`;
+        }
 
-    // Handle clicking on nodes to fetch new recommendations
+        $('#node-info-content').html(html);
+    });
+
+    //cy.on('mouseout', 'node', function () {
+    //    $('#node-info-content').html('Hover over a node to see details here.');
+    //});
+
+    // on node click, get similar authors and add to graph
     cy.on('tap', 'node', function (event) {
         const node = event.target;
         const nodeType = node.data('type');
@@ -162,6 +235,7 @@ $(document).ready(function () {
                         });
 
                         response.edges.forEach(edge => {
+                            console.log(edge.source,edge.target,edge.label)
                             if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
                                 cy.add({
                                     group: 'edges',
@@ -192,12 +266,18 @@ $(document).ready(function () {
                     if (response.status === 'success') {
                         response.nodes.forEach(node => {
                             if (cy.getElementById(node.id).length === 0) {
-                                cy.add({ group: 'nodes', data: { id: node.id, label: node.label, type:node.type } });
+                                console.log(node.review_id)
+                                cy.add({ group: 'nodes', data: { id: node.id, label:node.label, type: 'review' , 'book_title': node.book_title,
+                                'review_summary': node.review_summary, 'helpfulness_ratio': node.helpfulness_ratio,
+                                'review_score': node.review_score, 'review_time': node.review_time, 'review_text': node.review_text
+                            } });
                             }
                         });
 
                         response.edges.forEach(edge => {
+                            console.log(edge.source,edge.target,edge.label)
                             if (cy.getElementById(edge.source).length > 0 && cy.getElementById(edge.target).length > 0) {
+                                
                                 cy.add({
                                     group: 'edges',
                                     data: { source: edge.source, target: edge.target, label: edge.label }
