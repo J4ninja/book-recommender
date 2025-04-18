@@ -120,7 +120,7 @@ def get_page_range(page_obj, delta=2):
 
 def recommendations(request):
     '''renders graph template with user node added and list of user reviews'''
-    user_node = User.nodes.get_or_none(user_id = 'A12A08OL0TZY0W')
+    user_node = User.nodes.get_or_none(user_id = 'A01416042M2UP370M5JO')
     user_reviews = user_node.wrote_review.all()
 
     nodes = []
