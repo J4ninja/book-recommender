@@ -1,5 +1,7 @@
 # Book Recommender Graph System using Amazon Book Review Dataset
 
+![Demo](BookRecommenderDemo.gif)
+
 ## Table of Contents
 1. [Development](#development)
    - [Containers](#containers)
@@ -35,7 +37,7 @@ Django secret keys are stored in the .env file. For first time set up, create a 
         DJANGO_SECRET_KEY='YOUR_SECRET_KEY'
 
 ### Database (neo4j) Connection
-The Django uses a connection to a cloud hosted neo4j instance. Add the following variables to the .env file (credentials provided via email)
+The Django uses a connection to a cloud hosted neo4j instance. Create an instance on Aura and add the following variables to the .env file (credentials provided via email)
 
     NEO4J_URI=''  
     NEO4J_USERNAME=''  
